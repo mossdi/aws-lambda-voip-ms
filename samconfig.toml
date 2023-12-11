@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "HelloWorld"
+stack_name = "WebBOTG Voip.MS"
 
 [default.build.parameters]
 cached = true
