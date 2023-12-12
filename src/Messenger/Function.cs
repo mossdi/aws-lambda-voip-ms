@@ -1,11 +1,13 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Net.Http;
 using System.Text.Json;
-
+using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
+using Messenger.Dto;
+using Messenger.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -15,33 +17,50 @@ namespace Messenger
 
     public class Function
     {
-
-        private static readonly HttpClient client = new HttpClient();
-
-        private static async Task<string> GetCallingIP()
+        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
         {
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Add("User-Agent", "AWS Lambda .Net Client");
+            ServiceCollection serviceCollection = new ServiceCollection();
+            ConfigureServices(serviceCollection);
 
-            var msg = await client.GetStringAsync("http://checkip.amazonaws.com/").ConfigureAwait(continueOnCapturedContext:false);
+            ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-            return msg.Replace("\n","");
+            return await serviceProvider.GetService<App>()
+                .Run(JsonSerializer.Deserialize<SendSmsRequest>(request.Body));
         }
 
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest apigProxyEvent, ILambdaContext context)
+        private void ConfigureServices(IServiceCollection serviceCollection)
         {
+            serviceCollection
+                .AddTransient<App>()    
+                .AddTransient<HttpService>()
+                .AddTransient<VoipMsService>();
 
-            var location = await GetCallingIP();
-            var body = new Dictionary<string, string>
-            {
-                { "message", "hello world" },
-                { "location", location }
-            };
+            serviceCollection
+                .AddSingleton<IConfiguration>(new ConfigurationBuilder().AddJsonFile("appsettings.json").Build());
+
+            serviceCollection
+                .AddHttpClient("client", options => options.BaseAddress = new Uri("https://voip.ms/api/v1/rest.php"))
+                .AddHttpMessageHandler<HttpService>();
+        }
+    }
+
+    public class App
+    {
+
+        private VoipMsService voipMsService;
+
+        public App(VoipMsService voipMsService)
+        {
+            this.voipMsService = voipMsService;
+        }
+
+        public async Task<APIGatewayProxyResponse> Run(SendSmsRequest request)
+        {
+            SendSmsResponse response = await voipMsService.SendSms(request);
 
             return new APIGatewayProxyResponse
             {
-                Body = JsonSerializer.Serialize(body),
-                StatusCode = 200,
+                StatusCode = response.Status,
                 Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
             };
         }
