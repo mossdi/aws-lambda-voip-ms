@@ -22,8 +22,8 @@ public class HttpService: DelegatingHandler
     {
         string uri = QueryHelpers.AddQueryString(request.RequestUri!.ToString(), new Dictionary<string, string>()
         {
-            ["api_username"] = configuration["api_username"],
-            ["api_password"] = configuration["api_password"]
+            ["api_username"] = configuration.GetSection("VoipMsApi").GetSection("User").Value!,
+            ["api_password"] = configuration.GetSection("VoipMsApi").GetSection("Password").Value!
         });
 
         request.RequestUri = new Uri(uri);

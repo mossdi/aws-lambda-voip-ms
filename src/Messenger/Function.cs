@@ -39,7 +39,7 @@ namespace Messenger
                 .AddSingleton<IConfiguration>(new ConfigurationBuilder().AddJsonFile("appsettings.json").Build());
 
             serviceCollection
-                .AddHttpClient("client", options => options.BaseAddress = new Uri("https://voip.ms/api/v1/rest.php"))
+                .AddHttpClient("client")
                 .AddHttpMessageHandler<HttpService>();
         }
     }

@@ -3,7 +3,7 @@ using Messenger.Dto;
 
 namespace Messenger.Extensions;
 
-public static class SendSmsResponseExtension
+public static class SendSmsResponseExtensions
 {
     public static SendSmsResponse FromHttpResponseMessage(this SendSmsResponse response, HttpResponseMessage httpResponseMessage)
     {
