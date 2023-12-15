@@ -61,7 +61,8 @@ namespace Messenger
             return new APIGatewayProxyResponse
             {
                 StatusCode = response.Status,
-                Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } }
+                Headers = response.Headers,
+                Body = response.Content,
             };
         }
     }
