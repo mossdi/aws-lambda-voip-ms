@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Messenger.Dto;
 using Messenger.Extensions;
@@ -16,6 +17,7 @@ public class VoipMsService
     {
         client = httpClientFactory.CreateClient("client");
         client.BaseAddress = new Uri(configuration.GetSection("VoipMsApi").GetSection("BaseUri").Value!);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     public async Task<SendSmsResponse> SendSms(SendSmsRequest sendSmsRequest)
