@@ -18,6 +18,7 @@ public class VoipMsService
         client = httpClientFactory.CreateClient("client");
         client.BaseAddress = new Uri(configuration.GetSection("VoipMsApi").GetSection("BaseUri").Value!);
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {configuration.GetSection("VoipMsApi").GetSection("Token")}");
     }
 
     public async Task<SendSmsResponse> SendSms(SendSmsRequest sendSmsRequest)
