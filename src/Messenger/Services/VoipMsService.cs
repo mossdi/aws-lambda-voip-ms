@@ -24,7 +24,7 @@ public class VoipMsService
     public async Task<SendSmsResponse> SendSms(SendSmsRequest sendSmsRequest)
     {
         HttpResponseMessage response = await client
-            .GetAsync($"/?method=sendSMS&did={sendSmsRequest.OriginationNumber}&dst={sendSmsRequest.DestinationNumber}&message={sendSmsRequest.Message}");
+            .GetAsync($"api/v1/rest.php?method=sendSMS&did={sendSmsRequest.OriginationNumber}&dst={sendSmsRequest.DestinationNumber}&message={sendSmsRequest.Message}");
         
         return new SendSmsResponse().FromHttpResponseMessage(response); 
     }
