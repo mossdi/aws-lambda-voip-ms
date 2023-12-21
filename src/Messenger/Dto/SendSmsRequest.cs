@@ -13,4 +13,7 @@ public class SendSmsRequest
 
     [JsonPropertyName("Message")]
     public string Message { get; set; }
+
+    [JsonPropertyName("MessageId")]
+    public string? MessageId { get; set; }
 }
