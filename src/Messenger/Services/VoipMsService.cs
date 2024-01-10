@@ -16,6 +16,9 @@ public class VoipMsService
     public VoipMsService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
         client = httpClientFactory.CreateClient("client");
+
+        Environment.GetEnvironmentVariable("BaseUri");
+
         client.BaseAddress = new Uri(configuration.GetSection("VoipMsApi").GetSection("BaseUri").Value!);
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {configuration.GetSection("VoipMsApi").GetSection("Token")}");
@@ -25,7 +28,19 @@ public class VoipMsService
     {
         HttpResponseMessage response = await client
             .GetAsync($"api/v1/rest.php?method=sendSMS&did={sendSmsRequest.OriginationNumber}&dst={sendSmsRequest.DestinationNumber}&message={sendSmsRequest.Message}");
+
+        SendSmsResponse sendSmsResponse = new SendSmsResponse().FromHttpResponseMessage(response);
+
+        if (sendSmsRequest.MessageId != null) 
+        { 
+            Callback(new VoipMsSendSmsResponse().FromSendSmsResponse(sendSmsResponse));
+        }
+
+        return sendSmsResponse; 
+    }
+
+    private async void Callback(VoipMsSendSmsResponse voipMsSendSmsResponse)
+    {
         
-        return new SendSmsResponse().FromHttpResponseMessage(response); 
     }
 }
