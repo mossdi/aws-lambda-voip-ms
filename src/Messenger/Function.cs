@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.APIGatewayEvents;
@@ -15,15 +14,14 @@ namespace Messenger
 
     public class Function
     {
-        public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+        public async Task<APIGatewayProxyResponse> FunctionHandler(SendSmsRequest request, ILambdaContext context)
         {
             ServiceCollection serviceCollection = new ServiceCollection();
             ConfigureServices(serviceCollection);
 
             ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-            return await serviceProvider.GetService<App>()
-                .Run(JsonSerializer.Deserialize<SendSmsRequest>(request.Body));
+            return await serviceProvider.GetService<App>().Run(request);
         }
 
         private void ConfigureServices(IServiceCollection serviceCollection)
