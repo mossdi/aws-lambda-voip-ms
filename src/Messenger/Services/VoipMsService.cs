@@ -31,16 +31,6 @@ public class VoipMsService
 
         SendSmsResponse sendSmsResponse = new SendSmsResponse().FromHttpResponseMessage(response);
 
-        if (sendSmsRequest.MessageId != null) 
-        { 
-            Callback(new VoipMsSendSmsResponse().FromSendSmsResponse(sendSmsResponse));
-        }
-
         return sendSmsResponse; 
-    }
-
-    private async void Callback(VoipMsSendSmsResponse voipMsSendSmsResponse)
-    {
-        
     }
 }

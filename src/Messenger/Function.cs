@@ -9,57 +9,54 @@ using Microsoft.Extensions.DependencyInjection;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
-namespace Messenger
+namespace Messenger;
+
+public class Function
 {
-
-    public class Function
+    public async Task<APIGatewayProxyResponse> FunctionHandler(SendSmsRequest request, ILambdaContext context)
     {
-        public async Task<APIGatewayProxyResponse> FunctionHandler(SendSmsRequest request, ILambdaContext context)
-        {
-            ServiceCollection serviceCollection = new ServiceCollection();
-            ConfigureServices(serviceCollection);
+        ServiceCollection serviceCollection = new ServiceCollection();
+        ConfigureServices(serviceCollection);
 
-            ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
+        ServiceProvider serviceProvider = serviceCollection.BuildServiceProvider();
 
-            return await serviceProvider.GetService<App>().Run(request);
-        }
-
-        private void ConfigureServices(IServiceCollection serviceCollection)
-        {
-            serviceCollection
-                .AddTransient<App>()    
-                .AddTransient<HttpService>()
-                .AddTransient<VoipMsService>();
-
-            serviceCollection
-                .AddSingleton<IConfiguration>(new ConfigurationBuilder().AddJsonFile("appsettings.json").Build());
-
-            serviceCollection
-                .AddHttpClient("client")
-                .AddHttpMessageHandler<HttpService>();
-        }
+        return await serviceProvider.GetService<App>().Run(request);
     }
 
-    public class App
+    private void ConfigureServices(IServiceCollection serviceCollection)
     {
+        serviceCollection
+            .AddTransient<App>()    
+            .AddTransient<HttpService>()
+            .AddTransient<VoipMsService>();
 
-        private VoipMsService voipMsService;
+        serviceCollection
+            .AddSingleton<IConfiguration>(new ConfigurationBuilder().AddJsonFile("appsettings.json").Build());
 
-        public App(VoipMsService voipMsService)
+        serviceCollection
+            .AddHttpClient("client")
+            .AddHttpMessageHandler<HttpService>();
+    }
+}
+
+public class App
+{
+    private readonly VoipMsService voipMsService;
+
+    public App(VoipMsService voipMsService)
+    {
+        this.voipMsService = voipMsService;
+    }
+
+    public async Task<APIGatewayProxyResponse> Run(SendSmsRequest request)
+    {
+        SendSmsResponse response = await voipMsService.SendSms(request);
+
+        return new APIGatewayProxyResponse
         {
-            this.voipMsService = voipMsService;
-        }
-
-        public async Task<APIGatewayProxyResponse> Run(SendSmsRequest request)
-        {
-            SendSmsResponse response = await voipMsService.SendSms(request);
-
-            return new APIGatewayProxyResponse
-            {
-                StatusCode = response.Status,
-                Headers = response.Headers,
-                Body = response.Content,
-            };
-        }
+            StatusCode = response.Status,
+            Headers = response.Headers,
+            Body = response.Content,
+        };
     }
 }
